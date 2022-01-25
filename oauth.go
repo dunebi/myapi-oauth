@@ -59,8 +59,6 @@ func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		newCA := c.Param("CA")
 		newCA = strings.ToUpper(newCA)
-		// splitArr := strings.Split(param, "/")
-		// newCA := strings.ToUpper(splitArr[1]) // CA(google, facebook, github)
 
 		// 지정한 인증 사이트가 아닌 경우
 		if (newCA != "GOOGLE") && (newCA != "FACEBOOK") && (newCA != "GITHUB") {
@@ -81,12 +79,6 @@ func Login() gin.HandlerFunc {
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
-
-/*
-type AA interface {
-	A()
-}
-*/
 
 func LoginCallback(db *gorm.DB) gin.HandlerFunc {
 	apiURL := map[string]string{
@@ -130,6 +122,12 @@ func LoginCallback(db *gorm.DB) gin.HandlerFunc {
 			})
 			c.Abort()
 			return
+		}
+
+		isTbl := db.Migrator().HasTable(&Account{})
+		if !isTbl { // if no table, make table
+			db.Migrator().CreateTable(&Account{})
+			fmt.Println("Account Table Created")
 		}
 
 		var account, dbAccount Account
