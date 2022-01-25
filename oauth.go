@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
@@ -57,13 +58,14 @@ func Login() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		newCA := c.Param("CA")
+		newCA = strings.ToUpper(newCA)
 		// splitArr := strings.Split(param, "/")
 		// newCA := strings.ToUpper(splitArr[1]) // CA(google, facebook, github)
 
 		// 지정한 인증 사이트가 아닌 경우
-		if (CA != "GOOGLE") && (CA != "FACEBOOK") && (CA != "GITHUB") {
+		if (newCA != "GOOGLE") && (newCA != "FACEBOOK") && (newCA != "GITHUB") {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"input CA": CA,
+				"input CA": newCA,
 				"msg":      "use google, facebook or github",
 			})
 			return
