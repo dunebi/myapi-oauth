@@ -52,7 +52,7 @@ func GetOauth2Config(CA string) *oauth2.Config {
 	return oauth2Config
 }
 
-func Login() func(c *gin.Context) {
+func Login(c *gin.Context) func(c *gin.Context) {
 	var oauth2Config *oauth2.Config
 	CA := ""
 
@@ -87,7 +87,7 @@ type AA interface {
 }
 */
 
-func LoginCallback(db *gorm.DB) func(c *gin.Context) {
+func LoginCallback(c *gin.Context, db *gorm.DB) func(c *gin.Context) {
 	apiURL := map[string]string{
 		"GOOGLE":   "https://www.googleapis.com/oauth2/v3/userinfo",
 		"FACEBOOK": "https://graph.facebook.com/me?locale=en_US&fields=name,email",
