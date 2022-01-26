@@ -3,6 +3,7 @@ package oauth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -66,7 +67,7 @@ func LoginProcess() func(newCA string) (string, error) {
 	}
 }
 
-func LoginCallbackProcess() func(code string) (interface{}, error) {
+func LoginCallbackProcess(account interface{}) func(code string) (interface{}, error) {
 	apiURL := map[string]string{
 		"GOOGLE":   "https://www.googleapis.com/oauth2/v3/userinfo",
 		"FACEBOOK": "https://graph.facebook.com/me?locale=en_US&fields=name,email",
@@ -100,6 +101,7 @@ func LoginCallbackProcess() func(code string) (interface{}, error) {
 			return "", errors.New("error on read userInfo response body")
 		}
 
-		return userInfo, nil
+		json.Unmarshal(userInfo, &account)
+		return account, nil
 	}
 }
