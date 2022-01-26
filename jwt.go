@@ -7,17 +7,6 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-/* JWT는 Header, Payload, Signature로 이루어짐 */
-/* Payload는 "전송하는 내용" 정도의 뜻을 담고 있음. 로그인 정보라고 볼 수 있음 */
-type LoginPayload struct {
-	Account_Id  string `json:"account_id"`
-	Account_Pwd string `json:"account_pwd"`
-}
-
-type LoginResponse struct {
-	Token string `json:"token"` // 로그인 시 응답으로 받는 Token, JWT Token이 될 것으로 보임
-}
-
 type JwtClaim struct {
 	Account_Id string
 	jwt.StandardClaims

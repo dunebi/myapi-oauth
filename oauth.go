@@ -24,6 +24,10 @@ type Account struct {
 	CA    string
 }
 
+type A interface {
+	dbProcess(CA string) (string, error)
+}
+
 func RandToken() string {
 	b := make([]byte, 32)
 	rand.Read(b)
@@ -80,7 +84,7 @@ func Login() gin.HandlerFunc {
 	}
 }
 
-func LoginCallback(db *gorm.DB) gin.HandlerFunc {
+func LoginCallback(account A) gin.HandlerFunc {
 	apiURL := map[string]string{
 		"GOOGLE":   "https://www.googleapis.com/oauth2/v3/userinfo",
 		"FACEBOOK": "https://graph.facebook.com/me?locale=en_US&fields=name,email",
@@ -124,32 +128,12 @@ func LoginCallback(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		isTbl := db.Migrator().HasTable(&Account{})
-		if !isTbl { // if no table, make table
-			db.Migrator().CreateTable(&Account{})
-			fmt.Println("Account Table Created")
-		}
-
-		var account, dbAccount Account
 		json.Unmarshal(userInfo, &account)
+		email, err := account.dbProcess(CA)
 
-		email := account.Email
-		db.Where("Email = ? AND CA = ?", email, CA).Find(&dbAccount)
-
-		// DB 계정이 없다면 Register
-		if dbAccount.ID == 0 { // No Email Info. Auto register and request re-login
-			account.CA = CA
-			result := db.Create(&account)
-			if result.Error != nil {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"msg": "Error on creating Account",
-				})
-				return
-			}
-
-			c.JSON(http.StatusOK, gin.H{
-				"msg":         "New account created. Please re-login",
-				"accountInfo": account,
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"msg": err.Error(),
 			})
 			return
 		}
