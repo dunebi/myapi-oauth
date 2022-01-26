@@ -100,6 +100,6 @@ func LoginCallbackProcess(account interface{}) func(code string) (reflect.Value,
 		}
 
 		json.Unmarshal(userInfo, &account)
-		return reflect.ValueOf(nil), nil
+		return reflect.ValueOf(account), nil
 	}
 }
