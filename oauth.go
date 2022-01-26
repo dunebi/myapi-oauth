@@ -3,7 +3,6 @@ package oauth
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -67,6 +66,7 @@ func LoginProcess() func(newCA string) (string, error) {
 	}
 }
 
+// Use Interface. You can use this to input your own struct type(ex: db account)
 func LoginCallbackProcess(account interface{}) func(code string) (interface{}, error) {
 	apiURL := map[string]string{
 		"GOOGLE":   "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -101,7 +101,6 @@ func LoginCallbackProcess(account interface{}) func(code string) (interface{}, e
 			return "", errors.New("error on read userInfo response body")
 		}
 
-		json.Unmarshal(userInfo, &account)
-		return account, nil
+		return userInfo, nil
 	}
 }
