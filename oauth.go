@@ -122,17 +122,19 @@ func LoginCallback(account A) gin.HandlerFunc {
 			return
 		}
 
-		// DB에 계정이 있는 경우. JWT토큰을 생성하여 반환
-		jwtToken, err := GenerateToken(email)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"msg": "Error on Create JWT token",
-			})
-			return
-		}
+		/*
+			// DB에 계정이 있는 경우. JWT토큰을 생성하여 반환
+			jwtToken, err := GenerateToken(email)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+					"msg": "Error on Create JWT token",
+				})
+				return
+			}
 
-		c.JSON(http.StatusOK, gin.H{
-			"JWT": jwtToken,
-		})
+			c.JSON(http.StatusOK, gin.H{
+				"JWT": jwtToken,
+			})
+		*/
 	}
 }
