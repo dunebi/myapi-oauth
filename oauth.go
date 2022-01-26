@@ -3,7 +3,6 @@ package oauth
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -101,8 +100,6 @@ func LoginCallbackProcess() func(code string) (interface{}, error) {
 			return "", errors.New("error on read userInfo response body")
 		}
 
-		var account interface{}
-		json.Unmarshal(userInfo, &account)
-		return account, nil
+		return userInfo, nil
 	}
 }
