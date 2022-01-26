@@ -7,10 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/http"
+	"log"
 	"os"
 
-	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/facebook"
 	"golang.org/x/oauth2/github"
@@ -49,11 +48,11 @@ func GetOauth2Config(CA string) *oauth2.Config {
 	return oauth2Config
 }
 
-func Login(newCA string) func() (string, error) {
+func LoginProcess() func(newCA string) (string, error) {
 	var oauth2Config *oauth2.Config
 	CA := ""
 
-	return func() (string, error) { // (redirectURL, error)
+	return func(newCA string) (string, error) { // (redirectURL, error)
 		if (newCA != "GOOGLE") && (newCA != "FACEBOOK") && (newCA != "GITHUB") {
 			return "", errors.New("use google, facebook or github")
 		}
@@ -68,7 +67,7 @@ func Login(newCA string) func() (string, error) {
 	}
 }
 
-func LoginCallback(account A) gin.HandlerFunc {
+func LoginCallbackProcess() func(code string) (interface{}, error) {
 	apiURL := map[string]string{
 		"GOOGLE":   "https://www.googleapis.com/oauth2/v3/userinfo",
 		"FACEBOOK": "https://graph.facebook.com/me?locale=en_US&fields=name,email",
@@ -77,64 +76,33 @@ func LoginCallback(account A) gin.HandlerFunc {
 	var oauth2Config *oauth2.Config
 	CA := ""
 
-	return func(c *gin.Context) {
+	return func(code string) (interface{}, error) {
 		newCA := os.Getenv("CA")
 		if CA != newCA {
 			oauth2Config = GetOauth2Config(newCA)
 			CA = newCA
-			fmt.Println("Oauth2Config Changed")
+			log.Println("oauth2Config changed")
 		}
 
-		code := c.Query("code")
 		token, err := oauth2Config.Exchange(oauth2.NoContext, code)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"msg": "Error on get token",
-			})
-			return
+			return "", errors.New("error on get token")
 		}
 
 		client := oauth2Config.Client(oauth2.NoContext, token)
 		userInfoResp, err := client.Get(apiURL[CA])
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"msg":   "Error on get usrInfo",
-				"error": err.Error(),
-			})
+			return "", errors.New("error on call api with get method")
 		}
 		defer userInfoResp.Body.Close()
+
 		userInfo, err := ioutil.ReadAll(userInfoResp.Body)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"msg": "Error on read userinfo",
-			})
-			c.Abort()
-			return
+			return "", errors.New("error on read userInfo response body")
 		}
 
+		var account interface{}
 		json.Unmarshal(userInfo, &account)
-		//email, err := account.DbProcess(CA)
-
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"msg": err.Error(),
-			})
-			return
-		}
-
-		/*
-			// DB에 계정이 있는 경우. JWT토큰을 생성하여 반환
-			jwtToken, err := GenerateToken(email)
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"msg": "Error on Create JWT token",
-				})
-				return
-			}
-
-			c.JSON(http.StatusOK, gin.H{
-				"JWT": jwtToken,
-			})
-		*/
+		return account, nil
 	}
 }
