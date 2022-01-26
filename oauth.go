@@ -3,6 +3,7 @@ package oauth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -67,7 +68,7 @@ func LoginProcess() func(newCA string) (string, error) {
 }
 
 // Use Interface. You can use this to input your own struct type(ex: db account)
-func LoginCallbackProcess(account interface{}) func(code string) (interface{}, error) {
+func LoginCallbackProcess(account A) func(code string) (A, error) {
 	apiURL := map[string]string{
 		"GOOGLE":   "https://www.googleapis.com/oauth2/v3/userinfo",
 		"FACEBOOK": "https://graph.facebook.com/me?locale=en_US&fields=name,email",
@@ -76,7 +77,7 @@ func LoginCallbackProcess(account interface{}) func(code string) (interface{}, e
 	var oauth2Config *oauth2.Config
 	CA := ""
 
-	return func(code string) (interface{}, error) {
+	return func(code string) (A, error) {
 		newCA := os.Getenv("CA")
 		if CA != newCA {
 			oauth2Config = GetOauth2Config(newCA)
@@ -86,21 +87,22 @@ func LoginCallbackProcess(account interface{}) func(code string) (interface{}, e
 
 		token, err := oauth2Config.Exchange(oauth2.NoContext, code)
 		if err != nil {
-			return "", errors.New("error on get token")
+			return nil, errors.New("error on get token")
 		}
 
 		client := oauth2Config.Client(oauth2.NoContext, token)
 		userInfoResp, err := client.Get(apiURL[CA])
 		if err != nil {
-			return "", errors.New("error on call api with get method")
+			return nil, errors.New("error on call api with get method")
 		}
 		defer userInfoResp.Body.Close()
 
 		userInfo, err := ioutil.ReadAll(userInfoResp.Body)
 		if err != nil {
-			return "", errors.New("error on read userInfo response body")
+			return nil, errors.New("error on read userInfo response body")
 		}
 
-		return userInfo, nil
+		json.Unmarshal(userInfo, &account)
+		return account, nil
 	}
 }
