@@ -18,7 +18,7 @@ import (
 )
 
 type A interface {
-	dbProcess(CA string) (string, error)
+	DbProcess(CA string) (string, error)
 }
 
 func RandToken() string {
