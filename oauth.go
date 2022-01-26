@@ -4,11 +4,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
@@ -49,31 +49,22 @@ func GetOauth2Config(CA string) *oauth2.Config {
 	return oauth2Config
 }
 
-func Login() gin.HandlerFunc {
+func Login(newCA string) func() (string, error) {
 	var oauth2Config *oauth2.Config
 	CA := ""
 
-	return func(c *gin.Context) {
-		newCA := c.Param("CA")
-		newCA = strings.ToUpper(newCA)
-
-		// 지정한 인증 사이트가 아닌 경우
+	return func() (string, error) { // (redirectURL, error)
 		if (newCA != "GOOGLE") && (newCA != "FACEBOOK") && (newCA != "GITHUB") {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"input CA": newCA,
-				"msg":      "use google, facebook or github",
-			})
-			return
+			return "", errors.New("use google, facebook or github")
 		}
 
-		os.Setenv("CA", newCA) // Redirect Handler에서도 oauthConfig를 가져와야 하므로 환경변수로 설정
 		if CA != newCA {
 			oauth2Config = GetOauth2Config(newCA)
+			os.Setenv("CA", newCA)
 			CA = newCA
 		}
-
-		url := oauth2Config.AuthCodeURL(RandToken(), oauth2.AccessTypeOffline)
-		c.Redirect(http.StatusTemporaryRedirect, url)
+		URL := oauth2Config.AuthCodeURL(RandToken(), oauth2.AccessTypeOffline)
+		return URL, nil
 	}
 }
 
