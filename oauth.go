@@ -122,7 +122,7 @@ func LoginCallback(account A) gin.HandlerFunc {
 		}
 
 		json.Unmarshal(userInfo, &account)
-		email, err := account.dbProcess(CA)
+		email, err := account.DbProcess(CA)
 
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
