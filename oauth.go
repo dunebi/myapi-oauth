@@ -15,14 +15,7 @@ import (
 	"golang.org/x/oauth2/facebook"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
-	"gorm.io/gorm"
 )
-
-type Account struct {
-	gorm.Model
-	Email string `json:"email"`
-	CA    string
-}
 
 type A interface {
 	dbProcess(CA string) (string, error)
